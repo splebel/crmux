@@ -63,7 +63,27 @@ var server = http.createServer(function(req, res) {
     options.port = program.port;
     options.path = req.url;
     http.request(options, function(upRes) {
-      upRes.pipe(res);
+      if(req.url == '/json/list'){
+          upRes.on('data', function(data){
+              console.log('getting data');
+              if(data){
+                  console.log(data);
+                  var tabs = JSON.parse(data);
+                  console.log(tabs);
+                  tabs.map((tab) => {
+                      if(cachedWsUrls[tab.id]){
+                          tab.webSocketDebuggerUrl = cachedWsUrls[tab.id].replace('9222', '9223');
+                      }
+                  });
+                  res.write(JSON.stringify(tabs));
+                  upRes.pipe(res);
+              } else {
+                  upRes.pipe(res);
+              }
+          });
+        }else {
+            upRes.pipe(res);
+        }
     }).end();
   }
 });
